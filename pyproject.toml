@@ -1,0 +1,21 @@
+[project]
+name = "url-shortener"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "figdavi",email = "figueiredodavi.dev@proton.me"}
+]
+readme = "README.md"
+licens = { text = "MIT" }
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard] (>=0.116.1,<0.117.0)"
+]
+
+[tool.poetry]
+packages = [{include = "url-shortener", from = "src"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
