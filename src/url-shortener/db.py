@@ -1,7 +1,16 @@
 import sqlite3
 from pydantic import HttpUrl
+import secrets
 
 DB_NAME = "urls.db"
+
+def generate_short_code() -> str:
+    """Generates a random URL-safe 4 byte string
+
+    Returns:
+        str: The random string
+    """
+    return secrets.token_urlsafe(4)
 
 def create_table():
     """Creates the 'shortened_urls' table"""
@@ -16,13 +25,14 @@ def create_table():
                         """)
 
 
-def insert_url(url: HttpUrl, short_code: str):
+def insert_url(url: HttpUrl) -> str:
     with sqlite3.connect("urls.db") as conn:
         cursor = conn.cursor()
         while True:
+            short_code = generate_short_code()
             query_result = cursor.execute(
                 """
-                SELECT original_url 
+                SELECT 1 
                 FROM shortened_urls 
                 WHERE short_code = ?
                 """,
@@ -43,4 +53,4 @@ def insert_url(url: HttpUrl, short_code: str):
                         short_code,
                     ),
                 )
-                break
+                return short_code

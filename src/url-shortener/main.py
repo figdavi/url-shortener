@@ -1,4 +1,3 @@
-import secrets
 from typing import Any
 from fastapi import FastAPI
 from pydantic import BaseModel, HttpUrl, ValidationError
@@ -49,20 +48,10 @@ def validate_url(url: Any) -> HttpUrl:
         raise ValueError("Unexpected url validation error.")
 
 
-def generate_code() -> str:
-    """Generates a random URL-safe 4 byte string
-
-    Returns:
-        str: The random string
-    """
-    return secrets.token_urlsafe(4)
-
-
 @app.post("/shorten")
 def shorten_url(url: Any):
     url = validate_url(url)
-    short_code = generate_code()
 
-    db.insert_url(url, short_code)
+    short_code = db.insert_url(url)
 
     return f"Generated shorten url: {short_code}"
