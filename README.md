@@ -6,5 +6,5 @@ https://roadmap.sh/projects/url-shortening-service
 - [x] use the following format for time: "2021-09-01T12:00:00Z"
 - [ ] pydantic models for db
 - [ ] review url validation
-- [ ] routes and create app in __init__? https://fastapi.tiangolo.com/tutorial/bigger-applications/#an-example-file-structure
+- [ ] https://fastapi.tiangolo.com/tutorial/bigger-applications/#an-example-file-structure
 - [ ] ORM
