@@ -1,6 +1,7 @@
 import sqlite3
 from pydantic import HttpUrl
 import secrets
+from datetime import datetime
 
 DB_NAME = "urls.db"
 
@@ -12,6 +13,9 @@ def generate_short_code() -> str:
     """
     return secrets.token_urlsafe(4)
 
+def get_current_time_iso():
+    return datetime.now().isoformat('T', 'seconds')
+
 def create_table():
     """Creates the 'shortened_urls' table"""
     with sqlite3.connect("urls.db") as conn:
@@ -19,13 +23,20 @@ def create_table():
         cursor.execute("""
                         CREATE TABLE IF NOT EXISTS shortened_urls(
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            original_url TEXT NOT NULL,
-                            short_code TEXT NOT NULL
+                            url TEXT NOT NULL,
+                            short_code TEXT NOT NULL,
+                            created_at TEXT NOT NULL,
+                            updated_at TEXT NOT NULL
                         )
                         """)
 
 
 def insert_url(url: HttpUrl) -> str:
+    insert_sql = """
+    INSERT INTO shortened_urls (url, short_code, created_at, updated_at)
+        VALUES (?, ?, ?, ?)
+    """
+    
     with sqlite3.connect("urls.db") as conn:
         cursor = conn.cursor()
         while True:
@@ -43,14 +54,8 @@ def insert_url(url: HttpUrl) -> str:
 
             # If no url registered under generated short code, insert
             if row is None:
-                cursor.execute(
-                    """
-                    INSERT INTO shortened_urls (original_url, short_code)
-                            VALUES (?, ?)
-                            """,
-                    (
-                        str(url),
-                        short_code,
-                    ),
-                )
+                cur_time = get_current_time_iso()
+                cursor.execute(insert_sql,
+                               (str(url), short_code, cur_time, cur_time),
+                               )
                 return short_code
