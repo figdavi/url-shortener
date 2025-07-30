@@ -32,7 +32,8 @@ def create_table():
                             url TEXT NOT NULL,
                             short_code TEXT NOT NULL,
                             created_at TEXT NOT NULL,
-                            updated_at TEXT NOT NULL
+                            updated_at TEXT NOT NULL,
+                            access_count INTEGER DEFAULT 0
                         )
                         """)
         conn.commit()
@@ -84,6 +85,15 @@ def get_url(short_code: str) -> URLModel:
         
         if result:
             url = URLModel(url=result[0])
+            
+            update_sql = """
+            UPDATE shortened_urls 
+            SET access_count = access_count + 1
+            WHERE short_code = ?
+            """
+            
+            cursor.execute(update_sql, (short_code,))
+            conn.commit()
             return url
         else:
             raise ValueError(f"URL associated with '{short_code}' does not exist.")
@@ -119,3 +129,20 @@ def delete_url(short_code: str):
         if cursor.rowcount == 0:
             raise ValueError(f"Short code '{short_code}' does not exist.")
         conn.commit()
+        
+def get_url_access_count(short_code: str):
+    select_sql = """
+    SELECT access_count FROM shortened_urls
+        WHERE short_code = ?
+    """
+    
+    with sqlite3.connect("urls.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute(select_sql, (short_code,))
+
+        result = cursor.fetchone()
+        
+        if result:
+            return result
+        else:
+            raise ValueError(f"URL associated with '{short_code}' does not exist.")

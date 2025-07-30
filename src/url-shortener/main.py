@@ -50,6 +50,13 @@ def update_short_url(short_code: str, new_url: Any):
 def delete_short_url(short_code: str):
     try:
         db.delete_url(short_code)
-        return {"status": "deleted"}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    
+@app.get("/shorten/{short_code}/stats", status_code=200)
+def get_short_url_stats(short_code: str):
+    try:
+        access_count = db.get_url_access_count(short_code)
+        return {"access_count": access_count}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
