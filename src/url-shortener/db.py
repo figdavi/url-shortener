@@ -1,7 +1,7 @@
 import sqlite3
-from pydantic import HttpUrl
 import secrets
 from datetime import datetime, timezone
+from .models import URLModel
 
 DB_NAME = "urls.db"
 
@@ -19,8 +19,7 @@ def get_current_time() -> str:
 
     Returns:
         str: Current datetime in specified format
-    """    
-    # Ex: 
+    """     
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def create_table():
@@ -38,7 +37,7 @@ def create_table():
                         """)
 
 
-def insert_url(url: HttpUrl) -> str:
+def insert_url(url: URLModel) -> str:
     insert_sql = """
     INSERT INTO shortened_urls (url, short_code, created_at, updated_at)
         VALUES (?, ?, ?, ?)
@@ -48,13 +47,15 @@ def insert_url(url: HttpUrl) -> str:
         cursor = conn.cursor()
         while True:
             short_code = generate_short_code()
+            select_sql = """
+            SELECT 1 
+            FROM shortened_urls 
+            WHERE short_code = ?
+            """
+            
             query_result = cursor.execute(
-                """
-                SELECT 1 
-                FROM shortened_urls 
-                WHERE short_code = ?
-                """,
-                (short_code,),
+                select_sql,
+                (short_code,)
             )
 
             row = query_result.fetchone()
@@ -63,6 +64,25 @@ def insert_url(url: HttpUrl) -> str:
             if row is None:
                 cur_time = get_current_time()
                 cursor.execute(insert_sql,
-                               (str(url), short_code, cur_time, cur_time),
+                               (str(url), short_code, cur_time, cur_time)
                                )
                 return short_code
+
+def get_url(short_code: str) -> URLModel:
+    select_sql = """
+    SELECT url FROM shortened_urls
+        WHERE short_code = ?
+    """
+    
+    with sqlite3.connect("urls.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute(select_sql, (short_code,))
+
+        result = cursor.fetchone()
+        
+        if result:
+            url = URLModel(url=result[0])
+            return url
+        else:
+            raise ValueError(f"URL associated with {short_code} does not exist.")
+    
