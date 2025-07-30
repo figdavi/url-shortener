@@ -1,7 +1,7 @@
 import sqlite3
 from pydantic import HttpUrl
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 
 DB_NAME = "urls.db"
 
@@ -13,11 +13,18 @@ def generate_short_code() -> str:
     """
     return secrets.token_urlsafe(4)
 
-def get_current_time_iso():
-    return datetime.now().isoformat('T', 'seconds')
+def get_current_time() -> str:
+    """Return current datetime in the following format: YYYY-MM-dd'T'HH:MM:SS'Z'\n
+    Example: "2021-09-01T12:00:00Z"
+
+    Returns:
+        str: Current datetime in specified format
+    """    
+    # Ex: 
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def create_table():
-    """Creates the 'shortened_urls' table"""
+    """Creates the "shortened_urls" table"""
     with sqlite3.connect("urls.db") as conn:
         cursor = conn.cursor()
         cursor.execute("""
@@ -54,7 +61,7 @@ def insert_url(url: HttpUrl) -> str:
 
             # If no url registered under generated short code, insert
             if row is None:
-                cur_time = get_current_time_iso()
+                cur_time = get_current_time()
                 cursor.execute(insert_sql,
                                (str(url), short_code, cur_time, cur_time),
                                )
