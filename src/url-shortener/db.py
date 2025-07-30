@@ -64,7 +64,7 @@ def insert_url(url: URLModel) -> str:
             if row is None:
                 cur_time = get_current_time()
                 cursor.execute(insert_sql,
-                               (str(url), short_code, cur_time, cur_time)
+                               (str(url.url), short_code, cur_time, cur_time)
                                )
                 return short_code
 
@@ -85,4 +85,17 @@ def get_url(short_code: str) -> URLModel:
             return url
         else:
             raise ValueError(f"URL associated with {short_code} does not exist.")
+
+def update_url(short_code: str, new_url: URLModel):
+    update_sql = """
+    UPDATE shortened_urls 
+    SET url = ?, updated_at = ?
+    WHERE short_code = ?
+    """
     
+    with sqlite3.connect("urls.db") as conn:
+        cursor = conn.cursor()
+        cur_time = get_current_time()
+        cursor.execute(update_sql,
+                        (str(new_url.url), cur_time, short_code)
+                        )

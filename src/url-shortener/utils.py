@@ -1,10 +1,10 @@
-from pydantic import ValidationError, HttpUrl
+from pydantic import ValidationError
 from typing import Any
 from .models import URLModel
 
 
-def validate_url(url: Any) -> HttpUrl:
-    """Validates the given URL and returns a HttpUrl
+def validate_url(url: Any) -> URLModel:
+    """Validates the given URL and returns a URLModel instance
 
     Args:
         url (Any): The url to validate.
@@ -14,7 +14,7 @@ def validate_url(url: Any) -> HttpUrl:
         ValueError: Unexpected validation error.
 
     Returns:
-        HttpUrl: url attribute of class pydantic.HttpUrl
+        URLModel: Constructed and validated URLModel
     """
     candidates: list[Any] = [url, f"https://{url}", f"https://www.{url}"]
     last_err = None
@@ -22,7 +22,7 @@ def validate_url(url: Any) -> HttpUrl:
     for candidate in candidates:
         try:
             validated = URLModel(url=candidate)
-            return validated.url
+            return validated
         except ValidationError as e:
             # Store error, but continue trying all candidates, in case one works
             last_err = e

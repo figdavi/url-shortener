@@ -30,6 +30,18 @@ def create_short_url(url: Any):
 def get_original_url(short_code: str):
     try:
         url = db.get_url(short_code)
-        return url
+        return {"original_url": url.url}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    
+@app.put("/shorten/{short_code}", status_code=200)
+def update_short_url(short_code: str, new_url: Any):
+    try:
+        new_url = validate_url(new_url)
+        db.update_url(short_code, new_url)
+        return {"status": "updated"}
+    
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=e.errors())
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
