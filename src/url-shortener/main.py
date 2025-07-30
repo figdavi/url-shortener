@@ -1,5 +1,5 @@
 from typing import Any
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, HttpUrl, ValidationError
 from contextlib import asynccontextmanager
 from . import db
@@ -30,7 +30,7 @@ def validate_url(url: Any) -> HttpUrl:
     Returns:
         HttpUrl: url attribute of class pydantic.HttpUrl
     """
-    candidates: list[Any] = [url, f"https://{url}", f"https://www.{url}"]
+    candidates: list[Any] = [url] # f"https://{url}", f"https://www.{url}"]
     last_err = None
 
     for candidate in candidates:
@@ -48,10 +48,15 @@ def validate_url(url: Any) -> HttpUrl:
         raise ValueError("Unexpected url validation error.")
 
 
-@app.post("/shorten")
+@app.post("/shorten", status_code=201)
 def shorten_url(url: Any):
-    url = validate_url(url)
-
-    short_code = db.insert_url(url)
-
-    return f"Generated shorten url: {short_code}"
+    try:
+        url = validate_url(url)
+        short_code = db.insert_url(url)
+        return {"short_code": short_code}
+    
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=e.errors())
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
