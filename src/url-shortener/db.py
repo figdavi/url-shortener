@@ -35,6 +35,7 @@ def create_table():
                             updated_at TEXT NOT NULL
                         )
                         """)
+        conn.commit()
 
 
 def insert_url(url: URLModel) -> str:
@@ -64,10 +65,11 @@ def insert_url(url: URLModel) -> str:
             if row is None:
                 cur_time = get_current_time()
                 cursor.execute(insert_sql,
-                               (str(url.url), short_code, cur_time, cur_time)
+                               (str(url.url), short_code, cur_time, cur_time,)
                                )
+                conn.commit()
                 return short_code
-
+            
 def get_url(short_code: str) -> URLModel:
     select_sql = """
     SELECT url FROM shortened_urls
@@ -84,7 +86,7 @@ def get_url(short_code: str) -> URLModel:
             url = URLModel(url=result[0])
             return url
         else:
-            raise ValueError(f"URL associated with {short_code} does not exist.")
+            raise ValueError(f"URL associated with '{short_code}' does not exist.")
 
 def update_url(short_code: str, new_url: URLModel):
     update_sql = """
@@ -97,5 +99,23 @@ def update_url(short_code: str, new_url: URLModel):
         cursor = conn.cursor()
         cur_time = get_current_time()
         cursor.execute(update_sql,
-                        (str(new_url.url), cur_time, short_code)
+                        (str(new_url.url), cur_time, short_code,)
                         )
+        if cursor.rowcount == 0:
+            raise ValueError(f"Short code '{short_code}' does not exist.")
+        conn.commit()
+        
+def delete_url(short_code: str):
+    delete_sql = """
+    DELETE FROM shortened_urls
+    WHERE short_code = ?
+    """
+    
+    with sqlite3.connect("urls.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute(delete_sql,
+                        (short_code,)
+                        )
+        if cursor.rowcount == 0:
+            raise ValueError(f"Short code '{short_code}' does not exist.")
+        conn.commit()

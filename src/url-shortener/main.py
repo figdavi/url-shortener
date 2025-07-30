@@ -45,3 +45,11 @@ def update_short_url(short_code: str, new_url: Any):
         raise HTTPException(status_code=400, detail=e.errors())
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@app.delete("/shorten/{short_code}", status_code=204)
+def delete_short_url(short_code: str):
+    try:
+        db.delete_url(short_code)
+        return {"status": "deleted"}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
